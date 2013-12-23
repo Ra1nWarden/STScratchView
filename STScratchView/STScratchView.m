@@ -73,7 +73,8 @@
     CFRelease(pixels);
     
     CGContextSetFillColorWithColor(_contextMask, [UIColor blackColor].CGColor);
-    CGContextFillRect(_contextMask, self.frame);
+    CGContextFillRect(_contextMask, CGRectMake(0, 0, self.frame.size.width * scale, self.frame.size.height * scale));
+
     
     CGContextSetStrokeColorWithColor(_contextMask, [UIColor whiteColor].CGColor);
     CGContextSetLineWidth(_contextMask, _sizeBrush);
