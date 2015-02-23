@@ -13,6 +13,7 @@
 
 - (void)initScratch;
 - (void)refreshAutomaticScratch:(NSTimer *)timer;
+
 @end
 
 @implementation STScratchView
@@ -26,6 +27,11 @@
 	CGContextRef _contextMask;
     
     UIView *_refMovementView;
+
+    size_t _width;
+    size_t _height;
+    int _pointsFilled;
+    bool *_matrix;
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -49,6 +55,7 @@
     
     UIImage *imageToDraw = [UIImage imageWithCGImage:_scratchImage];
     [imageToDraw drawInRect:CGRectMake(0.0, 0.0, self.frame.size.width, self.frame.size.height)];
+    
 }
 
 // Method to change the view which will be scratched
@@ -86,6 +93,16 @@
     
     CGImageRelease(mask);
     CGColorSpaceRelease(colorspace);
+
+    _width = imageWidth / _sizeBrush;
+    _height = imageHeight / _sizeBrush;
+    _matrix = (bool *) malloc(_width * _height);
+    bool *tmp = _matrix;
+    for(size_t i = 0; i < _width * _height; i++) {
+        *tmp = false; 
+        tmp++;
+    }
+    _pointsFilled = 0;
 }
 
 - (void)scratchTheViewFrom:(CGPoint)startPoint to:(CGPoint)endPoint
@@ -95,6 +112,31 @@
     CGContextMoveToPoint(_contextMask, startPoint.x * scale, (self.frame.size.height - startPoint.y) * scale);
 	CGContextAddLineToPoint(_contextMask, endPoint.x * scale, (self.frame.size.height - endPoint.y) * scale);
 	CGContextStrokePath(_contextMask);
+    
+    size_t startx = MAX(MIN(startPoint.x, self.frame.size.width), 0) / self.frame.size.width * _width;
+    size_t starty = MAX(MIN(startPoint.y, self.frame.size.height), 0) / self.frame.size.height * _height;
+    size_t endx = MAX(MIN(endPoint.x, self.frame.size.width), 0) / self.frame.size.width * _width;
+    size_t endy = MAX(MIN(endPoint.y, self.frame.size.height), 0) / self.frame.size.height * _height;
+    
+    
+    CGFloat dx = (startx > endx ? -1.0 * (startx - endx) : 1.0 * (endx - startx)) / 100.0;
+    CGFloat dy = (starty > endy ? -1.0 * (starty - endy) : 1.0 * (endy - starty)) / 100.0;
+    
+    bool changed = false;
+    
+    for(int i = 0; i <= 100; i++) {
+        size_t newx = dx * i + startx;
+        size_t newy = dy * i + starty;
+        if(!_matrix[newy * _width + newx]) {
+            _matrix[newy * _width + newx] = true;
+            _pointsFilled++;
+            changed = true;
+        }
+    }
+    if(changed) {
+        [_delegate STScratchView:self didChangeProgress:((CGFloat)_pointsFilled) / ((CGFloat) (_width * _height))];
+    }
+    
 	[self setNeedsDisplay];
     
 }
@@ -108,6 +150,7 @@
     
     UITouch *touch = [[event touchesForView:self] anyObject];
     _currentTouchLocation = [touch locationInView:self];
+    
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event

@@ -9,7 +9,7 @@
 #import "STViewController.h"
 #import "STScratchView.h"
 
-@interface STViewController ()
+@interface STViewController () <STScratchViewDelegate>
 
 @end
 
@@ -21,6 +21,7 @@
     
     // Set up the STScratchView
     [_scratchView setSizeBrush:20.0];
+    _scratchView.delegate = self;
 
     // Create a (child) UIView
     UIImageView *ball = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, 0.0, 118.0, 111.0)];
@@ -56,6 +57,10 @@
     [customPath addLineToPoint:CGPointMake(90,80)];
     
     [_scratchView setAutomaticScratchCurve:customPath duration:1.0];
+}
+
+- (void)STScratchView:(STScratchView *)scratchView didChangeProgress:(CGFloat)prog {
+    NSLog(@"delegate called with progress %.2f", prog);
 }
 
 @end
