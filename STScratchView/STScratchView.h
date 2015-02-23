@@ -6,6 +6,12 @@
 //  Copyright (c) 2012 Sebastien Thiebaud. All rights reserved.
 //
 
+@class STScratchView;
+@protocol STScratchViewDelegate
+@required
+- (void)STScratchView:(STScratchView*)scratchView didChangeProgress:(CGFloat)prog;
+@end 
+
 @interface STScratchView : UIView
 
 @property (nonatomic, assign) float sizeBrush;
